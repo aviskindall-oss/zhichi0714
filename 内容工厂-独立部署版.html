@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>内容工厂 · 夏日营业中 🍹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#bdeeff;
+    --sky-mid:#e7f8fb;
+    --sand:#fff2d6;
+    --ocean:#0fa3b1;
+    --ocean-deep:#0b7d89;
+    --coral:#ff6b5b;
+    --coral-deep:#ea5140;
+    --sun:#ffc93c;
+    --palm:#0f9d80;
+    --ink:#0b3d42;
+    --muted:#5c7a80;
+    --card:#ffffff;
+    --card-line:#e3f2f0;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 85% 8%, rgba(255,201,60,0.55), transparent 40%),
+      linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 32%, var(--sand) 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4{ font-family:'Baloo 2', sans-serif; margin:0; }
+  button{ font-family:'Nunito', sans-serif; }
+
+  /* decorative floaters */
+  .cloud{ position:absolute; opacity:.8; filter:drop-shadow(0 4px 6px rgba(0,0,0,.05)); pointer-events:none; }
+  .cloud svg{ display:block; }
+
+  .wrap{ max-width:920px; margin:0 auto; padding:28px 20px 90px; position:relative; }
+
+  /* ---------------- Hero ---------------- */
+  .hero{ text-align:center; padding:26px 0 18px; position:relative; }
+  .hero .badge{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.7); border:1.5px solid var(--ocean);
+    color:var(--ocean-deep); font-weight:700; font-size:13px;
+    padding:6px 16px; border-radius:999px; margin-bottom:14px;
+  }
+  .hero h1{ font-size:clamp(32px,6vw,52px); color:var(--ocean-deep); line-height:1.05; }
+  .hero h1 .accent{ color:var(--coral); }
+  .hero p{ color:var(--muted); font-size:15px; max-width:520px; margin:12px auto 0; }
+
+  /* ---------------- Sun-arc stepper ---------------- */
+  .stepper{ position:relative; margin:34px 0 10px; }
+  .stepper svg{ width:100%; height:auto; display:block; }
+  .sun-marker{
+    position:absolute; width:34px; height:34px; margin-left:-17px; margin-top:-17px;
+    font-size:26px; display:flex; align-items:center; justify-content:center;
+    transition:left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
+    filter:drop-shadow(0 3px 6px rgba(255,180,0,.5));
+  }
+  .step-labels{ display:flex; justify-content:space-between; margin-top:2px; }
+  .step-labels .lbl{
+    flex:1; text-align:center; font-size:11.5px; font-weight:700; color:var(--muted);
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    cursor:default;
+  }
+  .step-labels .lbl .dot{
+    width:10px; height:10px; border-radius:50%; background:#cfe9e6; border:2px solid #fff;
+  }
+  .step-labels .lbl.active{ color:var(--coral-deep); }
+  .step-labels .lbl.active .dot{ background:var(--coral); }
+  .step-labels .lbl.done .dot{ background:var(--palm); }
+
+  /* ---------------- Cards / panels ---------------- */
+  .panel{ display:none; animation:rise .4s ease; }
+  .panel.show{ display:block; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background:var(--card); border:1px solid var(--card-line);
+    border-radius:22px; padding:26px 26px 24px;
+    box-shadow:0 10px 30px rgba(15,163,177,.08);
+    margin-bottom:18px;
+  }
+  .card h3{ font-size:21px; color:var(--ocean-deep); display:flex; align-items:center; gap:10px; }
+  .card .sub{ color:var(--muted); font-size:13.5px; margin:4px 0 18px; }
+
+  label{ display:block; font-weight:700; font-size:13.5px; color:var(--ink); margin:14px 0 6px; }
+  label .opt{ color:var(--muted); font-weight:500; }
+  input[type=text], textarea{
+    width:100%; border:1.5px solid #d9eeec; border-radius:14px; padding:11px 14px;
+    font-family:'Nunito',sans-serif; font-size:14.5px; color:var(--ink);
+    background:#fbfffe; resize:vertical;
+  }
+  input[type=text]:focus, textarea:focus{ outline:none; border-color:var(--ocean); box-shadow:0 0 0 3px rgba(15,163,177,.12); }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--coral); color:#fff; border:none; font-weight:800;
+    font-size:14.5px; padding:12px 24px; border-radius:999px; cursor:pointer;
+    box-shadow:0 6px 16px rgba(255,107,91,.35);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(255,107,91,.45); }
+  .btn:disabled{ background:#d9c9c6; box-shadow:none; cursor:not-allowed; transform:none; }
+  .btn.ghost{
+    background:#fff; color:var(--ocean-deep); border:1.5px solid var(--ocean);
+    box-shadow:none;
+  }
+  .btn.ghost:hover{ background:#eafcfb; }
+  .btn.small{ padding:8px 16px; font-size:13px; }
+
+  .row-btns{ display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+
+  /* topic cards */
+  .topic-grid{ display:grid; gap:12px; }
+  .topic-card{
+    border:2px solid #e3f2f0; border-radius:16px; padding:14px 16px; cursor:pointer;
+    transition:all .15s ease; background:#fcfffe;
+  }
+  .topic-card:hover{ border-color:var(--sun); }
+  .topic-card.selected{ border-color:var(--coral); background:#fff5f3; }
+  .topic-card .t-title{ font-weight:800; font-size:15.5px; color:var(--ink); margin-bottom:4px; }
+  .topic-meta{ display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+  .topic-meta b{ color:var(--ocean-deep); }
+  .topic-reason{ font-size:13px; color:var(--muted); }
+  .heat{ color:var(--sun); letter-spacing:1px; }
+
+  /* material chips */
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chip{
+    background:#eafcfb; border:1.5px solid #bfe9e6; color:var(--ocean-deep);
+    font-size:13px; font-weight:600; padding:6px 13px; border-radius:999px;
+  }
+  .chip.coral{ background:#fff0ee; border-color:#ffd2cc; color:var(--coral-deep); }
+  .mat-block h4{ font-size:13.5px; color:var(--palm); margin:16px 0 6px; text-transform:none; }
+
+  /* loading */
+  .loading{ display:flex; align-items:center; gap:12px; color:var(--muted); font-weight:700; font-size:14px; padding:20px 0; }
+  .wave-spin{
+    width:26px; height:26px; border-radius:50%;
+    border:3px solid #d9eeec; border-top-color:var(--coral);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .error-box{
+    background:#fff3f2; border:1.5px solid #ffc7c1; color:#c0392b;
+    padding:14px 16px; border-radius:14px; font-size:13.5px; margin-top:10px;
+  }
+
+  /* tags input */
+  .tag-editor{ display:flex; flex-wrap:wrap; gap:8px; padding:10px; border:1.5px solid #d9eeec; border-radius:14px; background:#fbfffe; }
+  .tag-editor .chip{ display:flex; align-items:center; gap:6px; }
+  .tag-editor .chip button{ background:none; border:none; color:var(--coral); cursor:pointer; font-weight:800; font-size:13px; padding:0; }
+  .tag-editor input{ border:none; flex:1; min-width:120px; font-size:14px; background:transparent; }
+  .tag-editor input:focus{ outline:none; }
+
+  /* image plan cards */
+  .imgplan-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .imgplan-card{ border:2px dashed #cdeeeb; border-radius:16px; padding:14px 16px; background:#fbfffe; }
+  .imgplan-card .tagname{
+    display:inline-block; font-size:11px; font-weight:800; color:#fff; background:var(--ocean);
+    padding:3px 10px; border-radius:999px; margin-bottom:8px;
+  }
+  .imgplan-card.cover .tagname{ background:var(--coral); }
+  .imgplan-card h4{ font-size:15px; margin:2px 0 6px; color:var(--ink); }
+  .imgplan-card p{ font-size:13px; color:var(--muted); margin:0; }
+  .imgplan-card ul{ margin:8px 0 0; padding-left:18px; font-size:13px; color:var(--ink); }
+
+  /* final output */
+  pre.final{
+    white-space:pre-wrap; background:#fbfffe; border:1.5px solid #d9eeec; border-radius:16px;
+    padding:20px; font-family:'Nunito',sans-serif; font-size:14px; color:var(--ink); line-height:1.8;
+  }
+  .checklist{ display:flex; flex-direction:column; gap:6px; margin-top:14px; font-size:13.5px; }
+  .checklist .item{ display:flex; align-items:center; gap:8px; }
+  .checklist .ok{ color:var(--palm); font-weight:800; }
+  .checklist .bad{ color:var(--coral-deep); font-weight:800; }
+
+  .copy-toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:10px 20px; border-radius:999px;
+    font-size:13.5px; font-weight:700; opacity:0; transition:all .25s ease; pointer-events:none;
+  }
+  .copy-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  footer{ text-align:center; color:var(--muted); font-size:12.5px; margin-top:40px; }
+
+  /* settings gear + modal */
+  .gear-btn{
+    position:absolute; top:8px; right:6px; width:42px; height:42px; border-radius:50%;
+    background:#fff; border:1.5px solid var(--card-line); cursor:pointer; font-size:18px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(15,163,177,.12);
+    transition:transform .2s ease;
+  }
+  .gear-btn:hover{ transform:rotate(25deg); }
+  .key-banner{
+    display:none; background:#fff3f2; border:1.5px solid #ffc7c1; color:#c0392b;
+    padding:12px 16px; border-radius:14px; font-size:13.5px; margin:0 0 18px;
+    align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  }
+  .key-banner.show{ display:flex; }
+  .key-banner button{ white-space:nowrap; }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(11,61,66,.45);
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{
+    background:#fff; border-radius:22px; padding:28px 26px; max-width:440px; width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  .modal-box h3{ font-size:19px; color:var(--ocean-deep); margin-bottom:6px; }
+  .modal-box .sub{ color:var(--muted); font-size:13px; margin-bottom:16px; }
+  .modal-box .warn-note{
+    background:#fff8e6; border:1.5px solid #ffe4a3; color:#8a6a00; font-size:12.5px;
+    padding:10px 12px; border-radius:12px; margin-top:14px; line-height:1.6;
+  }
+  .modal-close-row{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  select{
+    width:100%; border:1.5px solid #d9eeec; border-radius:14px; padding:11px 14px;
+    font-family:'Nunito',sans-serif; font-size:14.5px; color:var(--ink); background:#fbfffe;
+  }
+</style>
+</head>
+<body>
+
+<div class="cloud" style="top:40px; left:-20px;"><svg width="120" height="50"><ellipse cx="30" cy="30" rx="30" ry="18" fill="#fff"/><ellipse cx="65" cy="20" rx="34" ry="20" fill="#fff"/><ellipse cx="95" cy="32" rx="24" ry="14" fill="#fff"/></svg></div>
+<div class="cloud" style="top:120px; right:-30px;"><svg width="140" height="55"><ellipse cx="35" cy="34" rx="35" ry="18" fill="#fff"/><ellipse cx="75" cy="22" rx="38" ry="22" fill="#fff"/><ellipse cx="110" cy="36" rx="26" ry="15" fill="#fff"/></svg></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <button class="gear-btn" onclick="openSettings()" title="设置 API Key">⚙️</button>
+    <div class="badge">🏖️ 独立部署版 · 需自备 API Key</div>
+    <h1>内容工厂<span class="accent">·夏日营业中</span></h1>
+    <p>从选题挖掘到配图排版，跟着流程一步步来 —— 每一步都会真的调用 Claude 帮你搜索和创作，你只需要挑选、确认、微调。</p>
+  </div>
+
+  <div class="key-banner" id="keyBanner">
+    <span>⚠️ 还没设置 API Key，点右上角 ⚙️ 选择服务商并填入后才能开始生成。</span>
+    <button class="btn small" onclick="openSettings()">去设置</button>
+  </div>
+
+  <div class="stepper">
+    <svg viewBox="0 0 800 130" preserveAspectRatio="none">
+      <path id="arcPath" d="M 40 110 Q 400 -30 760 110" stroke="#ffffff" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M 40 110 Q 400 -30 760 110" stroke="var(--ocean)" stroke-width="3" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>
+    </svg>
+    <div class="sun-marker" id="sunMarker">☀️</div>
+  </div>
+  <div class="step-labels" id="stepLabels"></div>
+
+  <!-- STEP 0 : 资料收集 -->
+  <section class="panel" data-step="0">
+    <div class="card">
+      <h3>🧴 第一步 · 告诉我你的产品</h3>
+      <p class="sub">这些信息是"产品边界"—— 我仍然会去市场上搜真正的热门选题，只是不会跑出你的产品范围。</p>
+
+      <label>产品 / 领域 <span class="opt">(必填，例如"瑜伽服"、"儿童编程课"）</span></label>
+      <input type="text" id="in-niche" placeholder="例如：瑜伽服">
+
+      <label>产品 brief / 核心卖点 <span class="opt">(选填)</span></label>
+      <textarea id="in-brief" rows="3" placeholder="例如：四色速干面料，专为高温瑜伽设计..."></textarea>
+
+      <label>品牌调性 / 风格要求 <span class="opt">(选填)</span></label>
+      <textarea id="in-tone" rows="2" placeholder="例如：不要硬广，偏干货，要有故事感"></textarea>
+
+      <div class="row-btns">
+        <button class="btn" onclick="startTopics()">🔍 开始挖掘选题</button>
+      </div>
+      <div id="err-0"></div>
+    </div>
+  </section>
+
+  <!-- STEP 1 : 选题 -->
+  <section class="panel" data-step="1">
+    <div class="card">
+      <h3>🐚 第二步 · 挑一个选题</h3>
+      <p class="sub">正在结合市场热点和你的产品边界生成候选选题，选一个继续，或换一批。</p>
+      <div id="topics-loading" class="loading" style="display:none;"><div class="wave-spin"></div>正在搜索小红书热门话题…</div>
+      <div id="topics-grid" class="topic-grid"></div>
+      <div id="err-1"></div>
+      <div class="row-btns">
+        <button class="btn ghost small" onclick="startTopics()">🔄 换一批选题</button>
+        <button class="btn" id="btn-to-materials" disabled onclick="startMaterials()">收集素材 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 : 素材收集 -->
+  <section class="panel" data-step="2">
+    <div class="card">
+      <h3>🏄 第三步 · 收集素材</h3>
+      <p class="sub">围绕选题搜集竞品打法、可用事实和话题标签。</p>
+      <div id="mat-loading" class="loading"><div class="wave-spin"></div>正在收集参考素材…</div>
+      <div id="mat-content" style="display:none;">
+        <div class="mat-block"><h4>💡 竞品打法参考</h4><div class="chips" id="mat-angles"></div></div>
+        <div class="mat-block"><h4>📊 可用事实/数据</h4><div class="chips" id="mat-facts"></div></div>
+        <div class="mat-block"><h4>🏷️ 推荐话题标签</h4><div class="chips" id="mat-tags"></div></div>
+      </div>
+      <div id="err-2"></div>
+      <div class="row-btns">
+        <button class="btn ghost small" onclick="startMaterials()">🔄 重新收集</button>
+        <button class="btn" id="btn-to-copy" disabled onclick="startCopy()">开始写文案 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 : 文案撰写 + 审核 -->
+  <section class="panel" data-step="3">
+    <div class="card">
+      <h3>🍉 第四步 · 文案撰写 &amp; 审核</h3>
+      <p class="sub">生成后请核对产品事实是否准确 —— 这是产品信息的最后一道防线，可直接在下面编辑。</p>
+      <div id="copy-loading" class="loading"><div class="wave-spin"></div>正在撰写标题与正文…</div>
+      <div id="copy-content" style="display:none;">
+        <label>标题 <span class="opt" id="title-count"></span></label>
+        <input type="text" id="ed-title">
+
+        <label>正文</label>
+        <textarea id="ed-body" rows="10"></textarea>
+
+        <label>标签</label>
+        <div class="tag-editor" id="tag-editor">
+          <input type="text" id="tag-input" placeholder="输入标签后按回车" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag();}">
+        </div>
+      </div>
+      <div id="err-3"></div>
+      <div class="row-btns">
+        <button class="btn ghost small" onclick="startCopy()">🔄 重新生成</button>
+        <button class="btn" id="btn-to-image" disabled onclick="startImagePlan()">✅ 文案确认无误，规划配图 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 : 配图规划 -->
+  <section class="panel" data-step="4">
+    <div class="card">
+      <h3>🌺 第五步 · 配图规划</h3>
+      <p class="sub">封面 + 3 张内页，所有信息均来自你确认过的正文。</p>
+      <div id="img-loading" class="loading"><div class="wave-spin"></div>正在规划封面与内页文案…</div>
+      <div id="img-content" class="imgplan-grid" style="display:none;"></div>
+      <div id="err-4"></div>
+      <div class="row-btns">
+        <button class="btn ghost small" onclick="startImagePlan()">🔄 重新规划</button>
+        <button class="btn" id="btn-to-final" disabled onclick="assembleFinal()">生成最终排版 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5 : 排版输出 -->
+  <section class="panel" data-step="5">
+    <div class="card">
+      <h3>🍹 第六步 · 排版输出</h3>
+      <p class="sub">发布就绪的完整内容，可一键复制。</p>
+      <pre class="final" id="final-output"></pre>
+      <div class="checklist" id="checklist"></div>
+      <div class="row-btns">
+        <button class="btn ghost small" onclick="copyFinal()">📋 复制全部内容</button>
+        <button class="btn" onclick="goStep(6)">去发布 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 6 : 发布 -->
+  <section class="panel" data-step="6">
+    <div class="card">
+      <h3>🎉 第七步 · 发布</h3>
+      <p class="sub">内容已经就绪，选一种方式完成最后一步。</p>
+      <div class="mat-block">
+        <h4>方式 A · 手动发布</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 10px;">复制上一步的完整内容，粘贴到小红书 App 发布。</p>
+        <button class="btn ghost small" onclick="copyFinal()">📋 再次复制内容</button>
+      </div>
+      <div class="mat-block" style="margin-top:18px;">
+        <h4>方式 B · XHS Bridge 自动发布</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 6px;">如果你已安装 XHS Bridge，可在终端执行：</p>
+        <pre class="final" style="padding:14px;font-size:12.5px;">python cli.py publish --title-file title.txt --content-file content.txt --images "pic1.jpg" "pic2.jpg"</pre>
+      </div>
+      <div class="row-btns">
+        <button class="btn" onclick="restartAll()">🌊 再做一篇新内容</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>内容工厂 · 夏日营业中 · 基于 xiaohongshu-content-automation Skill · 由 Claude 实时生成</footer>
+</div>
+
+<div class="modal-overlay" id="settingsModal" onclick="if(event.target===this) closeSettings()">
+  <div class="modal-box">
+    <h3>⚙️ 模型服务商设置</h3>
+    <p class="sub">选择一个服务商，填入你自己的 API Key 就能跑起来。</p>
+
+    <label>服务商</label>
+    <select id="in-provider" onchange="onProviderChange()">
+      <option value="anthropic">Anthropic（Claude）</option>
+      <option value="deepseek">DeepSeek</option>
+      <option value="doubao">豆包 / 火山方舟（Volcengine Ark）</option>
+    </select>
+
+    <label>API Key</label>
+    <input type="text" id="in-apikey" placeholder="sk-...">
+
+    <!-- Anthropic model select -->
+    <div id="model-anthropic">
+      <label>模型</label>
+      <select id="in-model-anthropic">
+        <option value="claude-sonnet-5">Claude Sonnet 5（推荐，速度与质量均衡）</option>
+        <option value="claude-opus-4-8">Claude Opus 4.8（更强，更贵）</option>
+        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（更快更便宜）</option>
+      </select>
+    </div>
+
+    <!-- DeepSeek model select -->
+    <div id="model-deepseek" style="display:none;">
+      <label>模型</label>
+      <select id="in-model-deepseek">
+        <option value="deepseek-v4-pro">deepseek-v4-pro（推理更强）</option>
+        <option value="deepseek-v4-flash">deepseek-v4-flash（更快更便宜）</option>
+      </select>
+    </div>
+
+    <!-- Doubao model / endpoint -->
+    <div id="model-doubao" style="display:none;">
+      <label>模型 ID / 推理接入点 <span class="opt">(在火山方舟控制台创建)</span></label>
+      <input type="text" id="in-model-doubao" placeholder="例如 doubao-seed-1-6-251015 或 ep-xxxxxxxx">
+    </div>
+
+    <div id="cors-warn-deepseek" class="warn-note" style="display:none;">
+      ⚠️ DeepSeek 目前没有实时联网搜索能力，选题/素材步骤会依赖模型自身知识，可能不是最新的市场热点。
+    </div>
+    <div id="cors-warn-doubao" class="warn-note" style="display:none;">
+      ⚠️ 豆包同样没有内置的实时联网搜索，选题/素材步骤依赖模型自身知识。部分接入点需要先在火山方舟控制台创建"推理接入点"，把接入点 ID 填在上面。
+    </div>
+
+    <div class="warn-note">
+      ⚠️ 这个 Key 会明文保存在你浏览器的本地存储里，并且每次请求都会出现在浏览器的网络请求中 —— 打开这个网页的任何人，只要会看开发者工具，就能看到它。<br><br>
+      建议：只在你自己使用、不对外公开的页面里这样用。如果要做成给别人用的网站，应该把 API 调用挪到你自己的后端服务器上，不要把 Key 放在前端。<br><br>
+      另外：DeepSeek 和 火山方舟 的接口目前不一定允许浏览器直接跨域调用（CORS）。如果保存后生成时提示网络/CORS 错误，说明这家服务商不支持浏览器直连，需要一个简单的后端中转 —— 需要的话可以再让我加一个。
+    </div>
+
+    <div class="modal-close-row">
+      <button class="btn ghost small" onclick="clearApiKey()">清除 Key</button>
+      <button class="btn small" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="copy-toast" id="toast">已复制到剪贴板 ✅</div>
+
+<script>
+/* ---------------- state ---------------- */
+const state = {
+  niche:'', brief:'', tone:'',
+  topics:[], selectedTopic:null,
+  materials:null,
+  copy:{title:'',body:'',tags:[]},
+  imagePlan:null,
+};
+const STEP_LABELS = ['资料','选题','素材','文案','配图','排版','发布'];
+const STEP_EMOJI = ['🧴','🐚','🏄','🍉','🌺','🍹','🎉'];
+let currentStep = 0;
+
+/* ---------------- API key / settings ---------------- */
+function getProvider(){ return localStorage.getItem('xhs_factory_provider') || 'anthropic'; }
+function getApiKey(){ return localStorage.getItem('xhs_factory_key_'+getProvider()) || ''; }
+function getModel(){
+  const p = getProvider();
+  const defaults = { anthropic:'claude-sonnet-5', deepseek:'deepseek-v4-pro', doubao:'' };
+  return localStorage.getItem('xhs_factory_model_'+p) || defaults[p];
+}
+function onProviderChange(){
+  const p = document.getElementById('in-provider').value;
+  document.getElementById('model-anthropic').style.display = p==='anthropic' ? 'block' : 'none';
+  document.getElementById('model-deepseek').style.display = p==='deepseek' ? 'block' : 'none';
+  document.getElementById('model-doubao').style.display = p==='doubao' ? 'block' : 'none';
+  document.getElementById('cors-warn-deepseek').style.display = p==='deepseek' ? 'block' : 'none';
+  document.getElementById('cors-warn-doubao').style.display = p==='doubao' ? 'block' : 'none';
+  // populate key/model for this provider from storage
+  document.getElementById('in-apikey').value = localStorage.getItem('xhs_factory_key_'+p) || '';
+  if(p==='anthropic') document.getElementById('in-model-anthropic').value = localStorage.getItem('xhs_factory_model_anthropic') || 'claude-sonnet-5';
+  if(p==='deepseek') document.getElementById('in-model-deepseek').value = localStorage.getItem('xhs_factory_model_deepseek') || 'deepseek-v4-pro';
+  if(p==='doubao') document.getElementById('in-model-doubao').value = localStorage.getItem('xhs_factory_model_doubao') || '';
+}
+function openSettings(){
+  const p = getProvider();
+  document.getElementById('in-provider').value = p;
+  onProviderChange();
+  document.getElementById('settingsModal').classList.add('show');
+}
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('show'); }
+function saveSettings(){
+  const p = document.getElementById('in-provider').value;
+  const key = document.getElementById('in-apikey').value.trim();
+  localStorage.setItem('xhs_factory_provider', p);
+  if(key) localStorage.setItem('xhs_factory_key_'+p, key);
+  if(p==='anthropic') localStorage.setItem('xhs_factory_model_anthropic', document.getElementById('in-model-anthropic').value);
+  if(p==='deepseek') localStorage.setItem('xhs_factory_model_deepseek', document.getElementById('in-model-deepseek').value);
+  if(p==='doubao') localStorage.setItem('xhs_factory_model_doubao', document.getElementById('in-model-doubao').value.trim());
+  closeSettings();
+  refreshKeyBanner();
+}
+function clearApiKey(){
+  localStorage.removeItem('xhs_factory_key_'+getProvider());
+  document.getElementById('in-apikey').value='';
+  refreshKeyBanner();
+}
+function refreshKeyBanner(){
+  document.getElementById('keyBanner').classList.toggle('show', !getApiKey());
+}
+
+/* ---------------- LLM call helper (multi-provider) ---------------- */
+async function callClaude(prompt, useSearch){
+  const provider = getProvider();
+  const apiKey = getApiKey();
+  if(!apiKey){
+    openSettings();
+    throw new Error("请先在右上角 ⚙️ 设置 API Key");
+  }
+
+  if(provider === 'anthropic'){
+    const body = { model: getModel(), max_tokens:1000, messages:[{role:"user", content: prompt}] };
+    if(useSearch){ body.tools = [{type:"web_search_20250305", name:"web_search"}]; }
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.error){ throw new Error(data.error.message || "接口返回错误"); }
+    if(!data.content) throw new Error("接口没有返回内容");
+    return data.content.filter(c=>c.type==="text").map(c=>c.text).join("\n");
+  }
+
+  // DeepSeek / 豆包：都是 OpenAI 兼容的 chat/completions 格式，且都不支持内置联网搜索
+  let url, model;
+  if(provider === 'deepseek'){
+    url = "https://api.deepseek.com/chat/completions";
+    model = getModel();
+  } else { // doubao
+    url = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+    model = getModel();
+    if(!model) throw new Error("请先填写豆包的模型 ID / 推理接入点");
+  }
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization": "Bearer " + apiKey
+    },
+    body: JSON.stringify({
+      model: model,
+      max_tokens: 1000,
+      messages: [{role:"user", content: prompt}]
+    })
+  });
+  const data = await res.json();
+  if(data.error){ throw new Error((data.error.message || JSON.stringify(data.error))); }
+  const choice = data.choices && data.choices[0];
+  if(!choice) throw new Error("接口没有返回内容");
+  return choice.message.content;
+}
+function parseJSON(text){
+  let clean = text.replace(/```json|```/g,'').trim();
+  try{ return JSON.parse(clean); }
+  catch(e){
+    const m = clean.match(/[\[{][\s\S]*[\]}]/);
+    if(m){ return JSON.parse(m[0]); }
+    throw e;
+  }
+}
+
+/* ---------------- stepper UI ---------------- */
+function renderStepLabels(){
+  const el = document.getElementById('stepLabels');
+  el.innerHTML = STEP_LABELS.map((l,i)=>
+    `<div class="lbl ${i===currentStep?'active':(i<currentStep?'done':'')}">${STEP_EMOJI[i]}<span>${l}</span><div class="dot"></div></div>`
+  ).join('');
+}
+function moveSun(){
+  const path = document.getElementById('arcPath');
+  const len = path.getTotalLength();
+  const t = currentStep/(STEP_LABELS.length-1);
+  const pt = path.getPointAtLength(len*t);
+  const svg = path.closest('svg');
+  const vb = svg.viewBox.baseVal;
+  const rect = svg.getBoundingClientRect();
+  const scaleX = rect.width / vb.width;
+  const scaleY = rect.height / vb.height;
+  const marker = document.getElementById('sunMarker');
+  marker.style.left = (pt.x*scaleX) + 'px';
+  marker.style.top = (pt.y*scaleY) + 'px';
+}
+function goStep(n){
+  currentStep = n;
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.toggle('show', Number(p.dataset.step)===n);
+  });
+  renderStepLabels();
+  moveSun();
+  window.scrollTo({top: document.querySelector('.stepper').offsetTop - 20, behavior:'smooth'});
+}
+window.addEventListener('resize', moveSun);
+
+/* ---------------- Step 0 -> 1 : topics ---------------- */
+async function startTopics(){
+  state.niche = document.getElementById('in-niche').value.trim();
+  state.brief = document.getElementById('in-brief').value.trim();
+  state.tone = document.getElementById('in-tone').value.trim();
+  document.getElementById('err-0').innerHTML='';
+  if(!state.niche){
+    document.getElementById('err-0').innerHTML = '<div class="error-box">请先填写产品/领域，例如"瑜伽服"</div>';
+    return;
+  }
+  goStep(1);
+  document.getElementById('topics-loading').style.display='flex';
+  document.getElementById('topics-grid').innerHTML='';
+  document.getElementById('err-1').innerHTML='';
+  document.getElementById('btn-to-materials').disabled = true;
+  try{
+    const prompt = `你是小红书爆款选题专家。产品/领域：${state.niche}。
+${state.brief? '产品背景：'+state.brief : ''}
+${state.tone? '风格要求：'+state.tone : ''}
+请搜索该领域近期在小红书上的热门话题、爆款笔记结构和季节性热点，然后给出5个候选选题，兼顾市场热度与产品边界（不要虚构产品没有的卖点）。
+只输出一个JSON数组，不要输出任何其他文字或解释，格式严格如下：
+[{"title":"选题标题(不超过20个汉字)","audience":"目标人群(10字以内)","heat":1到5之间的整数,"difficulty":"低/中/高","reason":"推荐理由(不超过18字)"}]`;
+    const text = await callClaude(prompt, true);
+    state.topics = parseJSON(text);
+    renderTopics();
+  }catch(e){
+    document.getElementById('err-1').innerHTML = `<div class="error-box">选题生成失败：${e.message}，可以点"换一批选题"重试。</div>`;
+  }finally{
+    document.getElementById('topics-loading').style.display='none';
+  }
+}
+function renderTopics(){
+  const grid = document.getElementById('topics-grid');
+  grid.innerHTML = state.topics.map((t,i)=>`
+    <div class="topic-card" data-i="${i}" onclick="selectTopic(${i})">
+      <div class="t-title">${t.title}</div>
+      <div class="topic-meta"><span><b>人群</b> ${t.audience}</span><span class="heat">${'☀️'.repeat(t.heat||1)}</span><span><b>难度</b> ${t.difficulty}</span></div>
+      <div class="topic-reason">${t.reason}</div>
+    </div>
+  `).join('');
+}
+function selectTopic(i){
+  state.selectedTopic = state.topics[i];
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.toggle('selected', Number(c.dataset.i)===i));
+  document.getElementById('btn-to-materials').disabled = false;
+}
+
+/* ---------------- Step 1 -> 2 : materials ---------------- */
+async function startMaterials(){
+  if(!state.selectedTopic) return;
+  goStep(2);
+  document.getElementById('mat-loading').style.display='flex';
+  document.getElementById('mat-content').style.display='none';
+  document.getElementById('err-2').innerHTML='';
+  document.getElementById('btn-to-copy').disabled = true;
+  try{
+    const prompt = `选题：${state.selectedTopic.title}，目标人群：${state.selectedTopic.audience}。产品/领域：${state.niche}。
+请搜索相关的小红书竞品笔记打法、可引用的数据或事实、以及适合的话题标签。
+只输出一个JSON对象，不要任何其他文字，格式：
+{"competitorAngles":["...最多4条，每条不超过20字"],"facts":["...最多4条，每条不超过25字"],"hashtags":["#...最多6个"]}`;
+    const text = await callClaude(prompt, true);
+    state.materials = parseJSON(text);
+    renderMaterials();
+    document.getElementById('btn-to-copy').disabled = false;
+  }catch(e){
+    document.getElementById('err-2').innerHTML = `<div class="error-box">素材收集失败：${e.message}，可以重试。</div>`;
+  }finally{
+    document.getElementById('mat-loading').style.display='none';
+  }
+}
+function renderMaterials(){
+  document.getElementById('mat-content').style.display='block';
+  document.getElementById('mat-angles').innerHTML = (state.materials.competitorAngles||[]).map(a=>`<span class="chip">${a}</span>`).join('');
+  document.getElementById('mat-facts').innerHTML = (state.materials.facts||[]).map(a=>`<span class="chip">${a}</span>`).join('');
+  document.getElementById('mat-tags').innerHTML = (state.materials.hashtags||[]).map(a=>`<span class="chip coral">${a}</span>`).join('');
+}
+
+/* ---------------- Step 2 -> 3 : copywriting ---------------- */
+async function startCopy(){
+  goStep(3);
+  document.getElementById('copy-loading').style.display='flex';
+  document.getElementById('copy-content').style.display='none';
+  document.getElementById('err-3').innerHTML='';
+  document.getElementById('btn-to-image').disabled = true;
+  try{
+    const angles = (state.materials?.competitorAngles||[]).join('；');
+    const facts = (state.materials?.facts||[]).join('；');
+    const prompt = `你是小红书文案专家。基于以下信息撰写一篇小红书笔记：
+选题：${state.selectedTopic.title}
+目标人群：${state.selectedTopic.audience}
+产品/领域：${state.niche}
+${state.brief? '产品背景：'+state.brief : ''}
+${state.tone? '风格要求：'+state.tone : ''}
+竞品打法参考：${angles}
+可用事实：${facts}
+
+请生成：标题(不超过20个汉字单位，即"中文=1个单位，英文2个=1个单位")、正文(200-400字，自然分段，可用emoji)、3-8个标签(以#开头)。
+正文中不要使用"第一""最好""100%""保证""完全解决"等绝对化用语，不要虚构产品没有的卖点。
+只输出一个JSON对象，不要任何其他文字，格式：
+{"title":"...","body":"...","tags":["#...","#..."]}`;
+    const text = await callClaude(prompt, false);
+    const parsed = parseJSON(text);
+    state.copy = { title:parsed.title||'', body:parsed.body||'', tags:parsed.tags||[] };
+    renderCopy();
+    document.getElementById('btn-to-image').disabled = false;
+  }catch(e){
+    document.getElementById('err-3').innerHTML = `<div class="error-box">文案生成失败：${e.message}，可以重试。</div>`;
+  }finally{
+    document.getElementById('copy-loading').style.display='none';
+  }
+}
+function titleWeight(str){
+  let c=0;
+  for(const ch of str){ c += /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? 1 : 0.5; }
+  return Math.ceil(c);
+}
+function renderCopy(){
+  document.getElementById('copy-content').style.display='block';
+  document.getElementById('ed-title').value = state.copy.title;
+  document.getElementById('ed-body').value = state.copy.body;
+  updateTitleCount();
+  renderTags();
+  document.getElementById('ed-title').oninput = updateTitleCount;
+}
+function updateTitleCount(){
+  const v = document.getElementById('ed-title').value;
+  const w = titleWeight(v);
+  const el = document.getElementById('title-count');
+  el.textContent = `(${w}/20 单位)`;
+  el.style.color = w>20 ? 'var(--coral-deep)' : 'var(--muted)';
+}
+function renderTags(){
+  const editor = document.getElementById('tag-editor');
+  const input = document.getElementById('tag-input');
+  editor.querySelectorAll('.chip').forEach(c=>c.remove());
+  state.copy.tags.forEach((tag,i)=>{
+    const chip = document.createElement('span');
+    chip.className='chip coral';
+    chip.innerHTML = `${tag} <button onclick="removeTag(${i})">×</button>`;
+    editor.insertBefore(chip, input);
+  });
+}
+function addTag(){
+  const input = document.getElementById('tag-input');
+  let v = input.value.trim();
+  if(!v) return;
+  if(!v.startsWith('#')) v = '#'+v;
+  state.copy.tags.push(v);
+  input.value='';
+  renderTags();
+}
+function removeTag(i){ state.copy.tags.splice(i,1); renderTags(); }
+
+/* ---------------- Step 3 -> 4 : image plan ---------------- */
+async function startImagePlan(){
+  state.copy.title = document.getElementById('ed-title').value.trim();
+  state.copy.body = document.getElementById('ed-body').value.trim();
+  goStep(4);
+  document.getElementById('img-loading').style.display='flex';
+  document.getElementById('img-content').style.display='none';
+  document.getElementById('err-4').innerHTML='';
+  document.getElementById('btn-to-final').disabled = true;
+  try{
+    const prompt = `基于以下已确认的小红书正文，制定配图文案规划（1张封面 + 3张内页）。
+标题：${state.copy.title}
+正文：${state.copy.body}
+
+要求：图片文案的所有信息必须来自正文，禁止虚构、禁止绝对化用语（如"第一""最好""100%"）。请先判断内容赛道，再确定合适的信息密度和文字量。
+只输出一个JSON对象，不要任何其他文字，格式：
+{"cover":{"mainTitle":"10-20字","subTitle":"补充价值的一句话","points":["卖点1","卖点2","卖点3(最多3条)"]},
+"pages":[
+ {"theme":"用户为什么需要关注","title":"10-20字","body":"图片正文，根据赛道自动决定长度(30-350字)"},
+ {"theme":"解决方案","title":"10-20字","body":"..."},
+ {"theme":"信任/价值/行动理由","title":"10-20字","body":"..."}
+]}`;
+    const text = await callClaude(prompt, false);
+    state.imagePlan = parseJSON(text);
+    renderImagePlan();
+    document.getElementById('btn-to-final').disabled = false;
+  }catch(e){
+    document.getElementById('err-4').innerHTML = `<div class="error-box">配图规划失败：${e.message}，可以重试。</div>`;
+  }finally{
+    document.getElementById('img-loading').style.display='none';
+  }
+}
+function renderImagePlan(){
+  const el = document.getElementById('img-content');
+  el.style.display='grid';
+  const cover = state.imagePlan.cover||{};
+  const pages = state.imagePlan.pages||[];
+  let html = `<div class="imgplan-card cover"><span class="tagname">封面</span>
+    <h4>${cover.mainTitle||''}</h4><p>${cover.subTitle||''}</p>
+    <ul>${(cover.points||[]).map(p=>`<li>${p}</li>`).join('')}</ul></div>`;
+  pages.forEach((p,i)=>{
+    html += `<div class="imgplan-card"><span class="tagname">内页${i+1}</span>
+      <h4>${p.title||''}</h4><p style="color:var(--muted);font-size:12px;margin-bottom:4px;">${p.theme||''}</p>
+      <p>${p.body||''}</p></div>`;
+  });
+  el.innerHTML = html;
+}
+
+/* ---------------- Step 4 -> 5 : assemble final ---------------- */
+function assembleFinal(){
+  goStep(5);
+  const c = state.copy;
+  const ip = state.imagePlan||{cover:{},pages:[]};
+  const tags = c.tags.join(' ');
+  const text =
+`=== 标题 ===
+${c.title}
+
+=== 正文 ===
+${c.body}
+
+=== 标签 ===
+${tags}
+
+=== 配图文案 ===
+【封面】
+主标题：${ip.cover?.mainTitle||''}
+副标题：${ip.cover?.subTitle||''}
+核心卖点：
+${(ip.cover?.points||[]).map(p=>'• '+p).join('\n')}
+
+${(ip.pages||[]).map((p,i)=>`【内页${i+1}】\n主题：${p.theme||''}\n标题：${p.title||''}\n正文：${p.body||''}`).join('\n\n')}`;
+  document.getElementById('final-output').textContent = text;
+
+  const tw = titleWeight(c.title);
+  const bodyLen = [...c.body].length;
+  const tagCount = c.tags.length;
+  const imgCount = 1 + (ip.pages?.length||0);
+  const checks = [
+    [tw<=20, `标题长度 ${tw}/20 单位`],
+    [bodyLen>0, `正文长度 ${bodyLen} 字`],
+    [tagCount>=3 && tagCount<=8, `标签数 ${tagCount} 个（建议 3-8）`],
+    [imgCount>=2, `配图数 1 封面 + ${ip.pages?.length||0} 内页`],
+  ];
+  document.getElementById('checklist').innerHTML = checks.map(([ok,label])=>
+    `<div class="item"><span class="${ok?'ok':'bad'}">${ok?'✓':'✗'}</span>${label}</div>`
+  ).join('');
+}
+
+/* ---------------- copy to clipboard ---------------- */
+async function copyFinal(){
+  const text = document.getElementById('final-output').textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1800);
+}
+
+/* ---------------- restart ---------------- */
+function restartAll(){
+  document.getElementById('in-niche').value='';
+  document.getElementById('in-brief').value='';
+  document.getElementById('in-tone').value='';
+  state.topics=[]; state.selectedTopic=null; state.materials=null;
+  state.copy={title:'',body:'',tags:[]}; state.imagePlan=null;
+  goStep(0);
+}
+
+/* ---------------- init ---------------- */
+renderStepLabels();
+goStep(0);
+setTimeout(moveSun, 50);
+refreshKeyBanner();
+if(!getApiKey()){ setTimeout(openSettings, 400); }
+</script>
+</body>
+</html>
